@@ -1,14 +1,12 @@
 import React from 'react';
+import TracesTable from './components/TracesTable';
 
 function App() {
   return (
     <>
-      <div>
-        Hello
-      </div>
+      <TracesTable />
     </>
   )
 }
-
 
 export default App;
