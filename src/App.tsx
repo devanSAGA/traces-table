@@ -1,6 +1,6 @@
 import React from 'react';
 
-function App(): React.JSX.Element {
+function App() {
   return (
     <>
       <div>
@@ -10,4 +10,5 @@ function App(): React.JSX.Element {
   )
 }
 
-export default App
+
+export default App;
