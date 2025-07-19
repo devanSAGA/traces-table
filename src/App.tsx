@@ -1,5 +1,5 @@
 import React from 'react';
-import TracesTable from './components/TracesTable';
+import TracesTable from './components/features/TracesTable';
 
 function App() {
   return (
