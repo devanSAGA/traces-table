@@ -24,7 +24,6 @@ export const Tooltip = ({ children, content, placement = 'top', delayDuration = 
             sideOffset={5}
           >
             {content}
-            <TooltipPrimitive.Arrow className="fill-surface-inverse" />
           </TooltipPrimitive.Content>
         </TooltipPrimitive.Portal>
       </TooltipPrimitive.Root>

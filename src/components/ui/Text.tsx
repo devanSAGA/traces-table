@@ -23,7 +23,7 @@ interface TextProps {
 
 export const Text = ({ children, isTruncated = false, color }: TextProps) => {
   const classNames = [
-    isTruncated && 'overflow-hidden whitespace-nowrap text-ellipsis',
+    isTruncated && 'inline-block overflow-hidden whitespace-nowrap text-ellipsis max-w-full',
     color && `text-${color}`
   ].filter(Boolean).join(' ')
 

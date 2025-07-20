@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import {
   createColumnHelper,
   flexRender,
@@ -7,6 +8,7 @@ import {
 import { useTracesStore, type LogTraceType } from '../../store/tracesStore'
 import { Badge } from '../ui/Badge'
 import { Text } from '../ui/Text'
+import { SideDrawer, SIDE_DRAWER_WIDTH } from './SideDrawer'
 
 const columnHelper = createColumnHelper<LogTraceType>()
 
@@ -25,14 +27,14 @@ const getStatusType = (status: string) => {
 }
 
 const columns = [
-  columnHelper.accessor('id', {
-    header: 'ID',
+  columnHelper.accessor('name', {
+    header: 'Name',
     cell: (info) => (
       <Text isTruncated>{info.getValue()}</Text>
     ),
   }),
-  columnHelper.accessor('name', {
-    header: 'Name',
+  columnHelper.accessor('id', {
+    header: 'ID',
     cell: (info) => (
       <Text isTruncated>{info.getValue()}</Text>
     ),
@@ -94,6 +96,10 @@ const columns = [
 
 export default function TracesTable() {
   const traces = useTracesStore((state) => state.traces)
+  const [selectedTrace, setSelectedTrace] = useState<LogTraceType | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   
   const table = useReactTable({
     data: traces,
@@ -101,50 +107,127 @@ export default function TracesTable() {
     getCoreRowModel: getCoreRowModel(),
   })
 
+  const handleRowClick = (trace: LogTraceType) => {
+    setSelectedTrace(trace)
+    setIsDrawerOpen(true)
+  }
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false)
+    setSelectedTrace(null)
+  }
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const scrollLeft = scrollContainerRef.current.scrollLeft
+        const newIsScrolled = scrollLeft > 0
+        console.log('Scroll detected:', scrollLeft, 'isScrolled:', newIsScrolled)
+        setIsScrolled(newIsScrolled)
+      }
+    }
+
+    const scrollContainer = scrollContainerRef.current
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll)
+      return () => scrollContainer.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
   return (
-    <div className="p-6 bg-surface-base min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-md font-medium mb-6 text-on-surface-base">Traces</h1>
-        
-        <div className="bg-surface-highest rounded-lg shadow-sm border border-outline overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-outline">
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </th>
+    <div className="flex h-screen bg-surface-base">
+      {/* Main Content Area */}
+      <div 
+        className="transition-all duration-300"
+        style={{ 
+          width: isDrawerOpen ? `calc(100% - ${SIDE_DRAWER_WIDTH}px)` : '100%' 
+        }}
+      >
+        <div className="p-6">
+          <div className="max-w-full">
+            <h1 className="text-md font-medium mb-6 text-on-surface-base">Traces</h1>
+            
+            <div className="bg-surface-highest rounded-lg shadow-sm border border-outline overflow-hidden">
+              <div className="overflow-x-auto" ref={scrollContainerRef}>
+                <table className="min-w-full">
+                  <thead>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id} className="border-b border-outline">
+                        {headerGroup.headers.map((header, index) => (
+                          <th
+                            key={header.id}
+                            className={`px-6 py-3 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider ${
+                              index === 0 
+                                ? `sticky left-0 bg-surface-highest z-20 border-r border-outline` 
+                                : ''
+                            }`}
+                            style={{
+                              ...(index === 0 ? { minWidth: '200px' } : {}),
+                              ...(index > 0 && header.column.id !== 'status' ? { maxWidth: '150px' } : {}),
+                              ...(index === 0 && isScrolled ? { 
+                                boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
+                              } : {})
+                            }}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </th>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-outline">
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-surface-high transition-colors">
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-on-surface-highest"
+                  </thead>
+                  <tbody className="divide-y divide-outline">
+                    {table.getRowModel().rows.map((row) => (
+                      <tr 
+                        key={row.id} 
+                        className="group hover:bg-surface-high transition-colors cursor-pointer"
+                        onClick={() => handleRowClick(row.original)}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+                        {row.getVisibleCells().map((cell, index) => (
+                          <td
+                            key={cell.id}
+                            className={`px-6 py-4 text-sm text-on-surface-highest ${
+                              index === 0 
+                                ? `sticky left-0 bg-surface-highest group-hover:bg-surface-high z-20 border-r border-outline` 
+                                : ''
+                            }`}
+                            style={{
+                              ...(index === 0 ? { minWidth: '200px' } : {}),
+                              ...(index > 0 && cell.column.id !== 'status' ? { maxWidth: '150px' } : {}),
+                              ...(index === 0 && isScrolled ? { 
+                                boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
+                              } : {})
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Side Drawer */}
+      <div 
+        className="transition-all duration-300 overflow-hidden"
+        style={{ 
+          width: isDrawerOpen ? `${SIDE_DRAWER_WIDTH}px` : '0px' 
+        }}
+      >
+        <SideDrawer
+          isOpen={isDrawerOpen}
+          onClose={handleCloseDrawer}
+          trace={selectedTrace}
+        />
       </div>
     </div>
   )
