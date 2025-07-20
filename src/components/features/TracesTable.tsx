@@ -3,12 +3,16 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { ChevronRight, ChevronDown } from 'lucide-react'
 import { useTracesStore, type LogTraceType } from '../../store/tracesStore'
 import { Badge } from '../ui/Badge'
 import { Text } from '../ui/Text'
 import { SideDrawer, SIDE_DRAWER_WIDTH } from './SideDrawer'
+import { SpanFlatList } from '../SpanFlatList'
+import { useClickOutside } from '../../utils/useClickOutside'
 
 const columnHelper = createColumnHelper<LogTraceType>()
 
@@ -27,6 +31,27 @@ const getStatusType = (status: string) => {
 }
 
 const columns = [
+  columnHelper.display({
+    id: 'expander',
+    header: '',
+    cell: ({ row }) => {
+      return row.getCanExpand() ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation() // Prevent row click
+            row.getToggleExpandedHandler()()
+          }}
+          className="p-1 hover:bg-surface-low rounded transition-colors"
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className="w-4 h-4 text-on-surface-highest-subtle" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-on-surface-highest-subtle" />
+          )}
+        </button>
+      ) : null
+    },
+  }),
   columnHelper.accessor('name', {
     header: 'Name',
     cell: (info) => (
@@ -100,11 +125,15 @@ export default function TracesTable() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const sideDrawerRef = useRef<HTMLDivElement>(null)
   
   const table = useReactTable({
     data: traces,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: (row) => Boolean(row.original.spans && row.original.spans.length > 0),
   })
 
   const handleRowClick = (trace: LogTraceType) => {
@@ -134,6 +163,13 @@ export default function TracesTable() {
     }
   }, [])
 
+  // Click outside to close drawer
+  useClickOutside(
+    [tableContainerRef, sideDrawerRef],
+    handleCloseDrawer,
+    isDrawerOpen
+  )
+
   return (
     <div className="flex h-screen bg-surface-base">
       {/* Main Content Area */}
@@ -147,7 +183,7 @@ export default function TracesTable() {
           <div className="max-w-full">
             <h1 className="text-md font-medium mb-6 text-on-surface-base">Traces</h1>
             
-            <div className="bg-surface-highest rounded-lg shadow-sm border border-outline overflow-hidden">
+            <div className="bg-surface-highest rounded-lg shadow-sm border border-outline overflow-hidden" ref={tableContainerRef}>
               <div className="overflow-x-auto" ref={scrollContainerRef}>
                 <table className="min-w-full">
                   <thead>
@@ -157,14 +193,15 @@ export default function TracesTable() {
                           <th
                             key={header.id}
                             className={`px-6 py-3 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider ${
-                              index === 0 
-                                ? `sticky left-0 bg-surface-highest z-20 border-r border-outline` 
+                              index <= 1 
+                                ? `sticky left-0 bg-surface-highest z-20 ${index === 1 ? 'border-r border-outline' : ''}` 
                                 : ''
                             }`}
                             style={{
-                              ...(index === 0 ? { minWidth: '200px' } : {}),
-                              ...(index > 0 && header.column.id !== 'status' ? { maxWidth: '150px' } : {}),
-                              ...(index === 0 && isScrolled ? { 
+                              ...(index === 0 ? { left: '0px', width: '48px' } : {}),
+                              ...(index === 1 ? { left: '48px', minWidth: '200px' } : {}),
+                              ...(index > 1 && header.column.id !== 'status' ? { maxWidth: '150px' } : {}),
+                              ...(index === 1 && isScrolled ? { 
                                 boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
                               } : {})
                             }}
@@ -181,33 +218,45 @@ export default function TracesTable() {
                     ))}
                   </thead>
                   <tbody className="divide-y divide-outline">
-                    {table.getRowModel().rows.map((row) => (
-                      <tr 
-                        key={row.id} 
-                        className="group hover:bg-surface-high transition-colors cursor-pointer"
-                        onClick={() => handleRowClick(row.original)}
-                      >
-                        {row.getVisibleCells().map((cell, index) => (
-                          <td
-                            key={cell.id}
-                            className={`px-6 py-4 text-sm text-on-surface-highest ${
-                              index === 0 
-                                ? `sticky left-0 bg-surface-highest group-hover:bg-surface-high z-20 border-r border-outline` 
-                                : ''
-                            }`}
-                            style={{
-                              ...(index === 0 ? { minWidth: '200px' } : {}),
-                              ...(index > 0 && cell.column.id !== 'status' ? { maxWidth: '150px' } : {}),
-                              ...(index === 0 && isScrolled ? { 
-                                boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
-                              } : {})
-                            }}
+                    {table.getRowModel().rows.map((row) => {
+                      return (
+                        <>
+                          <tr 
+                            key={row.id} 
+                            className="group hover:bg-surface-high transition-colors cursor-pointer"
+                            onClick={() => handleRowClick(row.original)}
                           >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                            {row.getVisibleCells().map((cell, index) => (
+                              <td
+                                key={cell.id}
+                                className={`py-4 text-sm text-on-surface-highest ${
+                                  index <= 1 
+                                    ? `sticky left-0 bg-surface-highest group-hover:bg-surface-high z-20 ${index === 1 ? 'border-r border-outline' : ''} px-6` 
+                                    : 'px-6'
+                                }`}
+                                style={{
+                                  ...(index === 0 ? { left: '0px', width: '48px' } : {}),
+                                  ...(index === 1 ? { left: '48px', minWidth: '200px' } : {}),
+                                  ...(index > 1 && cell.column.id !== 'status' ? { maxWidth: '150px' } : {}),
+                                  ...(index === 1 && isScrolled ? { 
+                                    boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
+                                  } : {})
+                                }}
+                              >
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </td>
+                            ))}
+                          </tr>
+                          {row.getIsExpanded() && (
+                            <tr key={`${row.id}-expanded`} className="bg-surface-high">
+                              <td colSpan={table.getAllColumns().length} className="px-6 py-4">
+                                <SpanFlatList spans={row.original.spans || []} />
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -222,6 +271,7 @@ export default function TracesTable() {
         style={{ 
           width: isDrawerOpen ? `${SIDE_DRAWER_WIDTH}px` : '0px' 
         }}
+        ref={sideDrawerRef}
       >
         <SideDrawer
           isOpen={isDrawerOpen}
