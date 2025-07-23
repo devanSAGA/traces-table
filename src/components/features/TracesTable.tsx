@@ -4,9 +4,10 @@ import {
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ChevronRight, ChevronDown } from 'lucide-react'
+import { ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useTracesStore, type LogTraceType } from '../../store/tracesStore'
 import { Badge } from '../ui/Badge'
 import { Text } from '../ui/Text'
@@ -54,30 +55,36 @@ const columns = [
   }),
   columnHelper.accessor('name', {
     header: 'Name',
+    enableSorting: true,
     cell: (info) => (
       <Text isTruncated>{info.getValue()}</Text>
     ),
   }),
   columnHelper.accessor('id', {
     header: 'ID',
+    enableSorting: false,
     cell: (info) => (
       <Text isTruncated>{info.getValue()}</Text>
     ),
   }),
   columnHelper.accessor('startedAt', {
     header: 'Started At',
+    enableSorting: true,
     cell: (info) => new Date(info.getValue()).toLocaleString(),
   }),
   columnHelper.accessor('endedAt', {
     header: 'Ended At',
+    enableSorting: true,
     cell: (info) => new Date(info.getValue()).toLocaleString(),
   }),
   columnHelper.accessor('latency', {
     header: 'Latency (ms)',
+    enableSorting: true,
     cell: (info) => info.getValue().toLocaleString(),
   }),
   columnHelper.accessor('status', {
     header: 'Status',
+    enableSorting: true,
     cell: (info) => (
       <Badge type={getStatusType(info.getValue())}>
         {info.getValue()}
@@ -86,24 +93,28 @@ const columns = [
   }),
   columnHelper.accessor('projectId', {
     header: 'Project ID',
+    enableSorting: true,
     cell: (info) => (
       <Text isTruncated>{info.getValue()}</Text>
     ),
   }),
   columnHelper.accessor('referenceId', {
     header: 'Reference ID',
+    enableSorting: false,
     cell: (info) => (
       <Text isTruncated>{info.getValue() || 'N/A'}</Text>
     ),
   }),
   columnHelper.accessor('sessionId', {
     header: 'Session ID',
+    enableSorting: true,
     cell: (info) => (
       <Text isTruncated>{info.getValue() || 'N/A'}</Text>
     ),
   }),
   columnHelper.accessor('tags', {
     header: 'Tags',
+    enableSorting: false,
     cell: (info) => (
       <div className="flex flex-wrap gap-1">
         {info.getValue()?.slice(0, 2).map((tag, idx) => (
@@ -117,49 +128,67 @@ const columns = [
       </div>
     ),
   }),
-  columnHelper.display({
-    id: 'cost',
-    header: 'Cost ($)',
-    cell: ({ row }) => {
-      const spans = row.original.spans || []
-      const totalCost = spans.reduce((sum, span) => {
-        return sum + (span.parsedContent?.cost || 0)
-      }, 0)
-      return <Text>{totalCost.toFixed(4)}</Text>
+  columnHelper.accessor(
+    (row) => {
+      const spans = row.spans || []
+      return spans.reduce((sum, span) => sum + (span.parsedContent?.cost || 0), 0)
     },
-  }),
-  columnHelper.display({
-    id: 'inputTokens',
-    header: 'Input Tokens',
-    cell: ({ row }) => {
-      const spans = row.original.spans || []
-      const totalInputTokens = spans.reduce((sum, span) => {
-        return sum + (span.parsedContent?.inputTokens || 0)
-      }, 0)
-      return <Text>{totalInputTokens.toLocaleString()}</Text>
+    {
+      id: 'cost',
+      header: 'Cost ($)',
+      enableSorting: true,
+      cell: ({ getValue }) => <Text>{getValue().toFixed(4)}</Text>,
+    }
+  ),
+  columnHelper.accessor(
+    (row) => {
+      const spans = row.spans || []
+      return spans.reduce((sum, span) => sum + (span.parsedContent?.inputTokens || 0), 0)
     },
-  }),
-  columnHelper.display({
-    id: 'totalTokens',
-    header: 'Total Tokens',
-    cell: ({ row }) => {
-      const spans = row.original.spans || []
-      const totalTokens = spans.reduce((sum, span) => {
+    {
+      id: 'inputTokens',
+      header: 'Input Tokens',
+      enableSorting: true,
+      cell: ({ getValue }) => <Text>{getValue().toLocaleString()}</Text>,
+    }
+  ),
+  columnHelper.accessor(
+    (row) => {
+      const spans = row.spans || []
+      return spans.reduce((sum, span) => sum + (span.parsedContent?.outputTokens || 0), 0)
+    },
+    {
+      id: 'outputTokens',
+      header: 'Output Tokens',
+      enableSorting: true,
+      cell: ({ getValue }) => <Text>{getValue().toLocaleString()}</Text>,
+    }
+  ),
+  columnHelper.accessor(
+    (row) => {
+      const spans = row.spans || []
+      return spans.reduce((sum, span) => {
         const inputTokens = span.parsedContent?.inputTokens || 0
         const outputTokens = span.parsedContent?.outputTokens || 0
         return sum + inputTokens + outputTokens
       }, 0)
-      return <Text>{totalTokens.toLocaleString()}</Text>
     },
-  }),
-  columnHelper.display({
-    id: 'spanCount',
-    header: 'Span Count',
-    cell: ({ row }) => {
-      const spanCount = row.original.spans?.length || 0
-      return <Text>{spanCount}</Text>
-    },
-  }),
+    {
+      id: 'totalTokens',
+      header: 'Total Tokens',
+      enableSorting: true,
+      cell: ({ getValue }) => <Text>{getValue().toLocaleString()}</Text>,
+    }
+  ),
+  columnHelper.accessor(
+    (row) => row.spans?.length || 0,
+    {
+      id: 'spanCount',
+      header: 'Span Count',
+      enableSorting: true,
+      cell: ({ getValue }) => <Text>{getValue()}</Text>,
+    }
+  ),
   columnHelper.display({
     id: 'firstSpanInput',
     header: 'First Span Input',
@@ -198,15 +227,18 @@ const columns = [
       )
     },
   }),
-  columnHelper.display({
-    id: 'nonSuccessSpansCount',
-    header: 'Failed Spans',
-    cell: ({ row }) => {
-      const spans = row.original.spans || []
-      const failedCount = spans.filter(span => span.status === 'failure').length
-      return <Text>{failedCount}</Text>
+  columnHelper.accessor(
+    (row) => {
+      const spans = row.spans || []
+      return spans.filter(span => span.status === 'failure').length
     },
-  }),
+    {
+      id: 'nonSuccessSpansCount',
+      header: 'Failed Spans',
+      enableSorting: true,
+      cell: ({ getValue }) => <Text>{getValue()}</Text>,
+    }
+  ),
 ]
 
 export default function TracesTable() {
@@ -223,6 +255,7 @@ export default function TracesTable() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getRowCanExpand: (row) => Boolean(row.original.spans && row.original.spans.length > 0),
   })
 
@@ -286,6 +319,8 @@ export default function TracesTable() {
                               index <= 1 
                                 ? `sticky left-0 bg-surface-highest z-20 ${index === 1 ? 'border-r border-outline' : ''}` 
                                 : ''
+                            } ${
+                              header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-surface-high transition-colors' : ''
                             }`}
                             style={{
                               ...(index === 0 ? { left: '0px', width: '48px' } : {}),
@@ -295,13 +330,27 @@ export default function TracesTable() {
                                 boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
                               } : {})
                             }}
+                            onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
                           >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                            <div className="flex items-center gap-2">
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                              {header.column.getCanSort() && (
+                                <div className="flex flex-col">
+                                  {header.column.getIsSorted() === 'asc' ? (
+                                    <ArrowUp className="w-3 h-3" />
+                                  ) : header.column.getIsSorted() === 'desc' ? (
+                                    <ArrowDown className="w-3 h-3" />
+                                  ) : (
+                                    <ArrowUpDown className="w-3 h-3 opacity-50" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </th>
                         ))}
                       </tr>
