@@ -117,6 +117,96 @@ const columns = [
       </div>
     ),
   }),
+  columnHelper.display({
+    id: 'cost',
+    header: 'Cost ($)',
+    cell: ({ row }) => {
+      const spans = row.original.spans || []
+      const totalCost = spans.reduce((sum, span) => {
+        return sum + (span.parsedContent?.cost || 0)
+      }, 0)
+      return <Text>{totalCost.toFixed(4)}</Text>
+    },
+  }),
+  columnHelper.display({
+    id: 'inputTokens',
+    header: 'Input Tokens',
+    cell: ({ row }) => {
+      const spans = row.original.spans || []
+      const totalInputTokens = spans.reduce((sum, span) => {
+        return sum + (span.parsedContent?.inputTokens || 0)
+      }, 0)
+      return <Text>{totalInputTokens.toLocaleString()}</Text>
+    },
+  }),
+  columnHelper.display({
+    id: 'totalTokens',
+    header: 'Total Tokens',
+    cell: ({ row }) => {
+      const spans = row.original.spans || []
+      const totalTokens = spans.reduce((sum, span) => {
+        const inputTokens = span.parsedContent?.inputTokens || 0
+        const outputTokens = span.parsedContent?.outputTokens || 0
+        return sum + inputTokens + outputTokens
+      }, 0)
+      return <Text>{totalTokens.toLocaleString()}</Text>
+    },
+  }),
+  columnHelper.display({
+    id: 'spanCount',
+    header: 'Span Count',
+    cell: ({ row }) => {
+      const spanCount = row.original.spans?.length || 0
+      return <Text>{spanCount}</Text>
+    },
+  }),
+  columnHelper.display({
+    id: 'firstSpanInput',
+    header: 'First Span Input',
+    cell: ({ row }) => {
+      const spans = row.original.spans || []
+      if (spans.length === 0) return <Text>N/A</Text>
+      
+      const sortedSpans = [...spans].sort((a, b) => a.startedAt - b.startedAt)
+      const firstSpan = sortedSpans[0]
+      const input = firstSpan.content.input
+      
+      console.log('~~ firstSpan', firstSpan)
+      return (
+        <Text isTruncated>
+          {input ? (typeof input === 'string' ? input : JSON.stringify(input)) : 'N/A'}
+        </Text>
+      )
+    },
+  }),
+  columnHelper.display({
+    id: 'lastSpanOutput',
+    header: 'Last Span Output',
+    cell: ({ row }) => {
+      const spans = row.original.spans || []
+      if (spans.length === 0) return <Text>N/A</Text>
+      
+      const sortedSpans = [...spans].sort((a, b) => a.startedAt - b.startedAt)
+      const lastSpan = sortedSpans[sortedSpans.length - 1]
+      const output = lastSpan.content.output
+      
+      console.log('~~ lastSpan', lastSpan)
+      return (
+        <Text isTruncated>
+          {output ? (typeof output === 'string' ? output : JSON.stringify(output)) : 'N/A'}
+        </Text>
+      )
+    },
+  }),
+  columnHelper.display({
+    id: 'nonSuccessSpansCount',
+    header: 'Failed Spans',
+    cell: ({ row }) => {
+      const spans = row.original.spans || []
+      const failedCount = spans.filter(span => span.status === 'failure').length
+      return <Text>{failedCount}</Text>
+    },
+  }),
 ]
 
 export default function TracesTable() {
