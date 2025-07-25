@@ -65,9 +65,13 @@ src/
 
 - [x] Add smooth animation when side drawer appears/hides
 - [x] Close the side drawer when clicked outside
+- [x] Make the first column sticky while doing horizontal scroll
+- [x] Truncate the long text dynamically and show the full text in tooltip on hover
 
 ### Pending
 
+- [ ] Fix why provided fonts (Akkurat) are not applied
+- [ ] Disable horizontal scroll in the expanded row section showing span list 
 - [ ] Integrate the theme to match the visual consistency with other screens
 - [ ] Implement consistent interactions states through out the table
 
