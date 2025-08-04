@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   createColumnHelper,
   flexRender,
@@ -449,7 +449,7 @@ export default function TracesTable() {
                             onDragLeave={index > 1 ? handleDragLeave : undefined}
                             onDrop={index > 1 ? (e) => handleDrop(e, header.id) : undefined}
                             onDragEnd={index > 1 ? handleDragEnd : undefined}
-                            className={`px-4 py-2 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider group ${
+                            className={`p-2 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider group ${
                               index <= 1 
                                 ? `sticky left-0 bg-surface-low z-20 ${index === 1 ? 'border-r border-outline' : ''}` 
                                 : 'bg-surface-low'

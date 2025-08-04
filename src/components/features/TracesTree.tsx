@@ -10,13 +10,12 @@ interface TreeNodeData {
 
 interface TreeNodeProps {
   node: LogTraceType | LogSpanType;
-  isTrace?: boolean;
   level?: number;
   children?: TreeNodeData[];
   onNodeSelect?: (node: LogTraceType | LogSpanType) => void;
 }
 
-const TreeNode = ({ node, isTrace = false, level = 0, children = [], onNodeSelect }: TreeNodeProps) => {
+const TreeNode = ({ node, level = 0, children = [], onNodeSelect }: TreeNodeProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = children && children.length > 0;
 
@@ -208,7 +207,6 @@ const TraceTree = ({ trace, onNodeSelect }: TraceTreeProps) => {
             <TreeNode 
               key={traceItem.id}
               node={tree.node}
-              isTrace={true}
               level={0}
               children={tree.children}
               onNodeSelect={onNodeSelect}
