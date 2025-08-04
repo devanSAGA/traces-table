@@ -51,13 +51,13 @@ src/
 - [x] Expandable rows to show span details
 - [x] Full Trace-Span view as a side drawer to analyse traces and spans hierarchy and their individual properties
 - [x] Add support for both light and dark themes
+- [x] Integrate shortcuts system for power users [`Esc` to close Side Drawer, `cmd+k` to toggle theme]
 
 ### Pending
 
 - [ ] Add support for infinite scrolling and virtualization to handle large traces data
 - [ ] Enable columns customisation (reorder, resize, show/hide columns)
 - [ ] Add filters on various column fields
-- [ ] Integrate keyboard shortcuts for power users
 - [ ] Integrate Zod for runtime type validation
 
 ## UX

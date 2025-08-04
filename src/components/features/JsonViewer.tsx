@@ -1,6 +1,8 @@
 import JsonView from '@uiw/react-json-view'
+import { monokaiTheme as darkTheme } from '@uiw/react-json-view/monokai'
 import { Text } from '../ui/Text'
 import { LogTraceType, LogSpanType } from '../../store/tracesStore'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface JsonViewerProps {
   selectedNode?: LogTraceType | LogSpanType | null
@@ -8,6 +10,7 @@ interface JsonViewerProps {
 }
 
 export const JsonViewer = ({ selectedNode, defaultTrace }: JsonViewerProps) => {
+  const { isDark } = useTheme()
   const nodeToShow = selectedNode || defaultTrace
   
   if (!nodeToShow) {
@@ -40,6 +43,7 @@ export const JsonViewer = ({ selectedNode, defaultTrace }: JsonViewerProps) => {
         <JsonView 
           value={nodeToShow}
           style={{
+            ...(isDark ? darkTheme : {}),
             backgroundColor: 'transparent',
             fontSize: '12px',
             fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Cascadia, "Cascadia Code", Roboto Mono, Menlo, monospace'

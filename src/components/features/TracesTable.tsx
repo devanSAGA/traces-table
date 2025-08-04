@@ -15,6 +15,7 @@ import { SideDrawer, SIDE_DRAWER_WIDTH } from './SideDrawer'
 import { SpanFlatList } from '../SpanFlatList'
 import { useClickOutside } from '../../utils/useClickOutside'
 import { ThemeToggle } from '../ui/ThemeToggle'
+import { useShortcut } from '../../contexts/ShortcutContext'
 
 const columnHelper = createColumnHelper<LogTraceType>()
 
@@ -246,7 +247,6 @@ const getColumns = (selectedTrace: LogTraceType | null, isDrawerOpen: boolean) =
       const firstSpan = sortedSpans[0]
       const input = firstSpan.content.input
       
-      console.log('~~ firstSpan', firstSpan)
       return (
         <CodeCell 
           content={input ? (typeof input === 'string' ? input : JSON.stringify(input)) : 'N/A'}
@@ -266,7 +266,6 @@ const getColumns = (selectedTrace: LogTraceType | null, isDrawerOpen: boolean) =
       const lastSpan = sortedSpans[sortedSpans.length - 1]
       const output = lastSpan.content.output
       
-      console.log('~~ lastSpan', lastSpan)
       return (
         <CodeCell 
           content={output ? (typeof output === 'string' ? output : JSON.stringify(output)) : 'N/A'}
@@ -398,7 +397,6 @@ export default function TracesTable() {
       if (scrollContainerRef.current) {
         const scrollLeft = scrollContainerRef.current.scrollLeft
         const newIsScrolled = scrollLeft > 0
-        console.log('Scroll detected:', scrollLeft, 'isScrolled:', newIsScrolled)
         setIsScrolled(newIsScrolled)
       }
     }
@@ -417,6 +415,13 @@ export default function TracesTable() {
     isDrawerOpen,
     [themeToggleRef]
   )
+
+  // Keyboard shortcut to close drawer with Escape
+  useShortcut('Escape', handleCloseDrawer, {
+    id: 'close-sidedrawer',
+    enabled: isDrawerOpen,
+    description: 'Close side drawer'
+  })
 
   return (
     <div className="flex h-screen bg-surface-lowest">
@@ -461,8 +466,8 @@ export default function TracesTable() {
                               index > 1 ? 'cursor-move' : ''
                             }`}
                             style={{
-                              ...(index === 0 ? { left: '0px', width: '48px' } : {}),
-                              ...(index === 1 ? { left: '48px' } : {}),
+                              ...(index === 0 ? { left: '0px', width: '40px' } : {}),
+                              ...(index === 1 ? { left: '40px' } : {}),
                               ...(index > 1 && header.column.id !== 'status' ? { maxWidth: '150px' } : {}),
                               ...(header.column.id === 'startedAt' || header.column.id === 'endedAt' ? { width: '180px', minWidth: '180px', maxWidth: '180px' } : {}),
                               ...(header.column.id === 'tags' ? { width: '150px', minWidth: '150px', maxWidth: '150px' } : {}),
@@ -472,26 +477,28 @@ export default function TracesTable() {
                             }}
                             onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                                {header.column.getCanSort() && (
+                                  <div className="flex flex-col">
+                                    {header.column.getIsSorted() === 'asc' ? (
+                                      <ArrowUp className="w-3 h-3" />
+                                    ) : header.column.getIsSorted() === 'desc' ? (
+                                      <ArrowDown className="w-3 h-3" />
+                                    ) : (
+                                      <ArrowUpDown className="w-3 h-3 opacity-50" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                               {index > 1 && (
                                 <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-                              )}
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext()
-                                  )}
-                              {header.column.getCanSort() && (
-                                <div className="flex flex-col">
-                                  {header.column.getIsSorted() === 'asc' ? (
-                                    <ArrowUp className="w-3 h-3" />
-                                  ) : header.column.getIsSorted() === 'desc' ? (
-                                    <ArrowDown className="w-3 h-3" />
-                                  ) : (
-                                    <ArrowUpDown className="w-3 h-3 opacity-50" />
-                                  )}
-                                </div>
                               )}
                             </div>
                           </th>
@@ -507,7 +514,7 @@ export default function TracesTable() {
                             key={row.id} 
                             className={`group transition-colors cursor-pointer bg-surface-high ${
                               selectedTrace?.id === row.original.id && isDrawerOpen
-                                ? 'bg-primary-container-light hover:bg-primary-container-light border-l-2 border-l-primary'
+                                ? 'bg-primary-container-light hover:bg-primary-container-light border-l-2 border-l-primary text-primary font-medium'
                                 : 'hover:bg-primary-container-subtle border-b border-b-outline'
                             }`}
                             onClick={() => handleRowClick(row.original)}
@@ -515,22 +522,22 @@ export default function TracesTable() {
                             {row.getVisibleCells().map((cell, index) => (
                               <td
                                 key={cell.id}
-                                className={`py-2 text-sm ${
+                                className={`p-2 text-sm ${
                                   index <= 1 
-                                    ? `sticky left-0 z-20 ${index === 1 ? 'border-r border-outline' : ''} px-4 ${
+                                    ? `sticky left-0 z-20 ${index === 1 ? 'border-r border-outline' : ''} px-2 ${
                                         selectedTrace?.id === row.original.id && isDrawerOpen
                                           ? 'bg-primary-container-light'
                                           : 'bg-surface-high group-hover:bg-primary-container-subtle'
                                       }` 
-                                    : `px-4 ${
+                                    : `px-2 ${
                                         selectedTrace?.id === row.original.id && isDrawerOpen
                                           ? 'bg-primary-container-light'
                                           : ''
                                       }`
                                 }`}
                                 style={{
-                                  ...(index === 0 ? { left: '0px', width: '48px' } : {}),
-                                  ...(index === 1 ? { left: '48px', minWidth: '200px' } : {}),
+                                  ...(index === 0 ? { left: '0px', width: '40px' } : {}),
+                                  ...(index === 1 ? { left: '40px', minWidth: '200px' } : {}),
                                   ...(index > 1 && cell.column.id !== 'status' ? { maxWidth: '150px' } : {}),
                                   ...(cell.column.id === 'startedAt' || cell.column.id === 'endedAt' ? { width: '180px', minWidth: '180px', maxWidth: '180px' } : {}),
                                   ...(cell.column.id === 'tags' ? { width: '150px', minWidth: '150px', maxWidth: '150px' } : {}),
