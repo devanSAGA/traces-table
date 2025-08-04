@@ -3,7 +3,7 @@ import { LogTraceType, LogSpanType } from '../../store/tracesStore'
 import { TraceTree } from './TracesTree'
 import { JsonViewer } from './JsonViewer'
 
-export const SIDE_DRAWER_WIDTH = 420
+export const SIDE_DRAWER_WIDTH = 468
 
 interface SideDrawerProps {
   isOpen: boolean
@@ -22,13 +22,13 @@ export const SideDrawer = ({ isOpen, onClose, trace }: SideDrawerProps) => {
   }
 
   return (
-    <div className="bg-surface-highest border-l border-outline h-full flex flex-col">
+    <div className="bg-primary-container-subtle border border-outline flex flex-col m-2 rounded-lg" style={{ height: 'calc(100% - 16px)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-outline flex-shrink-0">
-        <h2 className="text-lg font-semibold text-on-surface-highest">Trace Details</h2>
+      <div className="flex items-center justify-between p-6 pb-0 border-outline flex-shrink-0">
+        <h2 className="text-base font-medium text-on-surface-highest">Trace Details</h2>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-surface-high rounded-md transition-colors"
+          className="p-2 hover:bg-primary-container-light rounded-md transition-colors"
           aria-label="Close drawer"
         >
           <svg 
@@ -47,7 +47,7 @@ export const SideDrawer = ({ isOpen, onClose, trace }: SideDrawerProps) => {
         {/* Traces Tree Section */}
         <div className="flex-1 flex flex-col min-h-0">
           <h3 className="text-sm font-medium text-on-surface-highest-subtle mb-3">Trace Tree</h3>
-          <div className="flex-1 bg-surface-high border border-outline rounded-lg overflow-hidden">
+          <div className="flex-1 bg-primary-container-light border border-outline rounded-lg overflow-hidden">
             <div className="h-full overflow-y-auto p-3">
               <TraceTree trace={trace} onNodeSelect={handleNodeSelect} />
             </div>
@@ -57,7 +57,7 @@ export const SideDrawer = ({ isOpen, onClose, trace }: SideDrawerProps) => {
         {/* JSON Viewer Section */}
         <div className="flex-1 flex flex-col min-h-0">
           <h3 className="text-sm font-medium text-on-surface-highest-subtle mb-3">JSON Viewer</h3>
-          <div className="flex-1 bg-surface-high border border-outline rounded-lg overflow-hidden">
+          <div className="flex-1 bg-primary-container-light border border-outline rounded-lg overflow-hidden">
             <div className="h-full overflow-y-auto p-3">
               <JsonViewer selectedNode={selectedNode} defaultTrace={trace} />
             </div>

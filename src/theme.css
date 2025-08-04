@@ -146,6 +146,8 @@
   --color-on-primary: rgba(238, 246, 220, 1);
   --color-primary-outline: rgba(84, 143, 40, 1);
   --color-primary-container: rgba(221, 234, 189, 1);
+  --color-primary-container-light: rgba(235, 243, 215, 1);
+  --color-primary-container-subtle: rgba(242, 248, 236, 1);
   --color-on-primary-container: rgba(74, 109, 71, 1);
 
   --color-secondary: rgba(43, 107, 94, 1);
@@ -520,6 +522,8 @@
     --color-on-primary: rgba(18, 70, 39, 1);
     --color-primary-outline: rgba(74, 245, 143, 1);
     --color-primary-container: rgba(28, 69, 52, 1);
+    --color-primary-container-light: rgba(35, 85, 65, 1);
+    --color-primary-container-subtle: rgba(25, 32, 28, 1);
     --color-on-primary-container: rgba(78, 239, 143, 1);
 
     --color-secondary: rgba(61, 215, 215, 1);

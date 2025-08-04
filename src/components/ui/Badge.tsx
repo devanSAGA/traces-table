@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 
-type BadgeType = 'success' | 'error' | 'warning' | 'unknown'
+type BadgeType = 'success' | 'error' | 'warning' | 'unknown' | 'neutral'
 
 interface BadgeProps {
   children: ReactNode
@@ -8,7 +8,7 @@ interface BadgeProps {
 }
 
 const getBadgeClasses = (type: BadgeType): string => {
-  const baseClasses = 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-md'
+  const baseClasses = 'inline-flex items-center justify-center px-0.5 py-0.5 text-xs font-medium rounded-base'
   
   switch (type) {
     case 'success':
@@ -19,6 +19,8 @@ const getBadgeClasses = (type: BadgeType): string => {
       return `${baseClasses} bg-warning text-on-warning border border-warning-outline`
     case 'unknown':
       return `${baseClasses} bg-surface-low text-on-surface-low-subtle border border-outline`
+    case 'neutral':
+      return `${baseClasses} bg-accent-8-container text-accent-8 border border-accent-8-outline`
     default:
       return `${baseClasses} bg-surface-low text-on-surface-low-subtle border border-outline`
   }

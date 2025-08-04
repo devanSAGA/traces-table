@@ -17,6 +17,58 @@ import { useClickOutside } from '../../utils/useClickOutside'
 
 const columnHelper = createColumnHelper<LogTraceType>()
 
+const CodeCell = ({ content, isSelected }: { content: string, isSelected: boolean }) => (
+  <div className={`p-1 rounded font-mono text-xs max-w-full overflow-hidden flex items-center ${
+    isSelected ? 'bg-primary-container' : 'bg-surface-tint-mild'
+  }`}>
+    <Text isTruncated>
+      {content}
+    </Text>
+  </div>
+)
+
+const TagsCell = ({ tags }: { tags: string[] }) => {
+  const [showTooltip, setShowTooltip] = useState(false)
+  
+  if (tags.length === 0) return <span className="text-xs muted">No tags</span>
+  
+  if (tags.length === 1) {
+    return (
+      <Badge type="neutral">
+        {tags[0]}
+      </Badge>
+    )
+  }
+  
+  return (
+    <div className="flex items-center gap-1">
+      <Badge type="neutral">
+        {tags[0]}
+      </Badge>
+      <div className="relative">
+        <div 
+          className="bg-outline text-on-surface-low text-xs px-1.5 py-0.5 rounded-sm cursor-pointer hover:bg-outline-strong transition-colors"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          +{tags.length - 1}
+        </div>
+        {showTooltip && (
+          <div className="absolute left-0 top-full mt-1 bg-surface-inverse text-on-surface-inverse text-xs p-2 rounded-md shadow-lg z-50 min-w-max">
+            <div className="flex flex-wrap gap-1 max-w-48">
+              {tags.slice(1).map((tag, idx) => (
+                <span key={idx} className="bg-surface-tint-mild px-1.5 py-0.5 rounded-sm whitespace-nowrap">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const getStatusType = (status: string) => {
   switch (status) {
     case 'success':
@@ -31,7 +83,7 @@ const getStatusType = (status: string) => {
   }
 }
 
-const columns = [
+const getColumns = (selectedTrace: LogTraceType | null, isDrawerOpen: boolean) => [
   columnHelper.display({
     id: 'expander',
     header: '',
@@ -42,12 +94,16 @@ const columns = [
             e.stopPropagation() // Prevent row click
             row.getToggleExpandedHandler()()
           }}
-          className="p-1 hover:bg-surface-low rounded transition-colors"
+          className={`p-1 rounded transition-colors ${
+            row.getIsExpanded() 
+              ? 'bg-primary-container text-primary hover:bg-primary-container' 
+              : 'hover:bg-primary-container'
+          }`}
         >
           {row.getIsExpanded() ? (
-            <ChevronDown className="w-4 h-4 text-on-surface-highest-subtle" />
+            <ChevronDown className="w-4 h-4" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-on-surface-highest-subtle" />
+            <ChevronRight className="w-4 h-4" />
           )}
         </button>
       ) : null
@@ -115,18 +171,7 @@ const columns = [
   columnHelper.accessor('tags', {
     header: 'Tags',
     enableSorting: false,
-    cell: (info) => (
-      <div className="flex flex-wrap gap-1">
-        {info.getValue()?.slice(0, 2).map((tag, idx) => (
-          <Badge key={idx} type="unknown">
-            {tag}
-          </Badge>
-        )) || 'N/A'}
-        {(info.getValue()?.length || 0) > 2 && (
-          <span className="text-xs text-on-surface-low-subtle">+{(info.getValue()?.length || 0) - 2}</span>
-        )}
-      </div>
-    ),
+    cell: (info) => <TagsCell tags={info.getValue() || []} />,
   }),
   columnHelper.accessor(
     (row) => {
@@ -202,9 +247,10 @@ const columns = [
       
       console.log('~~ firstSpan', firstSpan)
       return (
-        <Text isTruncated>
-          {input ? (typeof input === 'string' ? input : JSON.stringify(input)) : 'N/A'}
-        </Text>
+        <CodeCell 
+          content={input ? (typeof input === 'string' ? input : JSON.stringify(input)) : 'N/A'}
+          isSelected={selectedTrace?.id === row.original.id && isDrawerOpen}
+        />
       )
     },
   }),
@@ -221,9 +267,10 @@ const columns = [
       
       console.log('~~ lastSpan', lastSpan)
       return (
-        <Text isTruncated>
-          {output ? (typeof output === 'string' ? output : JSON.stringify(output)) : 'N/A'}
-        </Text>
+        <CodeCell 
+          content={output ? (typeof output === 'string' ? output : JSON.stringify(output)) : 'N/A'}
+          isSelected={selectedTrace?.id === row.original.id && isDrawerOpen}
+        />
       )
     },
   }),
@@ -252,7 +299,7 @@ export default function TracesTable() {
   
   const table = useReactTable({
     data: traces,
-    columns,
+    columns: getColumns(selectedTrace, isDrawerOpen),
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -294,7 +341,7 @@ export default function TracesTable() {
   )
 
   return (
-    <div className="flex h-screen bg-surface-base">
+    <div className="flex h-screen bg-surface-lowest">
       {/* Main Content Area */}
       <div 
         className="transition-all duration-300"
@@ -302,30 +349,32 @@ export default function TracesTable() {
           width: isDrawerOpen ? `calc(100% - ${SIDE_DRAWER_WIDTH}px)` : '100%' 
         }}
       >
-        <div className="p-6">
+        <div className="p-4">
           <div className="max-w-full">
             <h1 className="text-md font-medium mb-6 text-on-surface-base">Traces</h1>
             
             <div className="bg-surface-highest rounded-lg shadow-sm border border-outline overflow-hidden" ref={tableContainerRef}>
               <div className="overflow-x-auto" ref={scrollContainerRef}>
-                <table className="min-w-full">
+                <table className="min-w-full" style={{ tableLayout: 'fixed' }}>
                   <thead>
                     {table.getHeaderGroups().map((headerGroup) => (
                       <tr key={headerGroup.id} className="border-b border-outline">
                         {headerGroup.headers.map((header, index) => (
                           <th
                             key={header.id}
-                            className={`px-6 py-3 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider ${
+                            className={`px-4 py-2 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider ${
                               index <= 1 
-                                ? `sticky left-0 bg-surface-highest z-20 ${index === 1 ? 'border-r border-outline' : ''}` 
-                                : ''
+                                ? `sticky left-0 bg-surface-low z-20 ${index === 1 ? 'border-r border-outline' : ''}` 
+                                : 'bg-surface-low'
                             } ${
                               header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-surface-high transition-colors' : ''
                             }`}
                             style={{
                               ...(index === 0 ? { left: '0px', width: '48px' } : {}),
-                              ...(index === 1 ? { left: '48px', minWidth: '200px' } : {}),
+                              ...(index === 1 ? { left: '48px' } : {}),
                               ...(index > 1 && header.column.id !== 'status' ? { maxWidth: '150px' } : {}),
+                              ...(header.column.id === 'startedAt' || header.column.id === 'endedAt' ? { width: '180px', minWidth: '180px', maxWidth: '180px' } : {}),
+                              ...(header.column.id === 'tags' ? { width: '150px', minWidth: '150px', maxWidth: '150px' } : {}),
                               ...(index === 1 && isScrolled ? { 
                                 boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
                               } : {})
@@ -362,21 +411,35 @@ export default function TracesTable() {
                         <>
                           <tr 
                             key={row.id} 
-                            className="group hover:bg-surface-high transition-colors cursor-pointer"
+                            className={`group transition-colors cursor-pointer bg-surface-high ${
+                              selectedTrace?.id === row.original.id && isDrawerOpen
+                                ? 'bg-primary-container-light hover:bg-primary-container-light border-l-2 border-l-primary'
+                                : 'hover:bg-primary-container-subtle border-b border-b-outline'
+                            }`}
                             onClick={() => handleRowClick(row.original)}
                           >
                             {row.getVisibleCells().map((cell, index) => (
                               <td
                                 key={cell.id}
-                                className={`py-4 text-sm text-on-surface-highest ${
+                                className={`py-2 text-sm ${
                                   index <= 1 
-                                    ? `sticky left-0 bg-surface-highest group-hover:bg-surface-high z-20 ${index === 1 ? 'border-r border-outline' : ''} px-6` 
-                                    : 'px-6'
+                                    ? `sticky left-0 z-20 ${index === 1 ? 'border-r border-outline' : ''} px-4 ${
+                                        selectedTrace?.id === row.original.id && isDrawerOpen
+                                          ? 'bg-primary-container-light'
+                                          : 'bg-surface-high group-hover:bg-primary-container-subtle'
+                                      }` 
+                                    : `px-4 ${
+                                        selectedTrace?.id === row.original.id && isDrawerOpen
+                                          ? 'bg-primary-container-light'
+                                          : ''
+                                      }`
                                 }`}
                                 style={{
                                   ...(index === 0 ? { left: '0px', width: '48px' } : {}),
                                   ...(index === 1 ? { left: '48px', minWidth: '200px' } : {}),
                                   ...(index > 1 && cell.column.id !== 'status' ? { maxWidth: '150px' } : {}),
+                                  ...(cell.column.id === 'startedAt' || cell.column.id === 'endedAt' ? { width: '180px', minWidth: '180px', maxWidth: '180px' } : {}),
+                                  ...(cell.column.id === 'tags' ? { width: '150px', minWidth: '150px', maxWidth: '150px' } : {}),
                                   ...(index === 1 && isScrolled ? { 
                                     boxShadow: '2px 0 4px rgba(0, 0, 0, 0.1)' 
                                   } : {})

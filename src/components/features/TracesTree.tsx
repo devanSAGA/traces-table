@@ -47,28 +47,32 @@ const TreeNode = ({ node, isTrace = false, level = 0, children = [], onNodeSelec
   return (
     <div className="text-sm">
       <div 
-        className="flex items-center py-2 rounded-md transition-colors group"
-        style={{ paddingLeft: `${12 + level * 12}px` }}
+        className="flex items-center py-0 rounded-md transition-colors group"
+        style={{ paddingLeft: `${level * 12}px` }}
       >
         {/* Chevron Icon - Only for expand/collapse */}
         {hasChildren ? (
           <button
-            className="w-4 h-4 mr-2 flex-shrink-0 hover:bg-surface-highest rounded-sm p-0.5 transition-colors"
+            className={`p-0.5 mr-1 flex-shrink-0 rounded transition-colors ${
+              isExpanded 
+                ? 'bg-primary-container text-primary hover:bg-primary-container' 
+                : 'hover:bg-primary-container'
+            }`}
             onClick={toggleExpanded}
           >
             {isExpanded ? (
-              <ChevronDown className="w-full h-full text-on-surface-highest-subtle" />
+              <ChevronDown className="w-4 h-4" />
             ) : (
-              <ChevronRight className="w-full h-full text-on-surface-highest-subtle" />
+              <ChevronRight className="w-4 h-4" />
             )}
           </button>
         ) : (
-          <div className="w-4 mr-2 flex-shrink-0"></div>
+          <div className="w-6 mr-2 flex-shrink-0"></div>
         )}
                 
         {/* Clickable Content Area - For node selection */}
         <div 
-          className="flex items-center gap-2 flex-1 min-w-0 hover:bg-surface-high rounded-md px-2 py-1 cursor-pointer transition-colors overflow-hidden"
+          className="flex items-center gap-2 flex-1 min-w-0 hover:bg-surface-high rounded-md p-1 cursor-pointer transition-colors overflow-hidden"
           onClick={handleLabelClick}
         >
           {/* Status Icon */}
@@ -79,10 +83,9 @@ const TreeNode = ({ node, isTrace = false, level = 0, children = [], onNodeSelec
           {/* Name - takes remaining space and truncates */}
           <div className="flex-1 min-w-0">
             <Text 
-              color={isTrace ? 'primary' : 'on-surface-highest'} 
-              isTruncated
+              color='primary'
             >
-              <span className={isTrace ? 'font-semibold' : 'font-medium'}>
+              <span className='font-medium'>
                 {node.name}
               </span>
             </Text>
@@ -100,7 +103,7 @@ const TreeNode = ({ node, isTrace = false, level = 0, children = [], onNodeSelec
       </div>
       
       {hasChildren && isExpanded && (
-        <div className="mt-1">
+        <div>
           {children.map((child: TreeNodeData) => (
             <TreeNode 
               key={child.node.id} 
