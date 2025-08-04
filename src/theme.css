@@ -633,6 +633,15 @@
   opacity: 0.4;
 }
 
+@utility transition-none {
+  & *,
+  & *::before,
+  & *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 @utility bg-surface-highest {
   @apply text-on-surface-highest;
 

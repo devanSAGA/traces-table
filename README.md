@@ -50,6 +50,7 @@ src/
 - [x] Interactive data table for traces with sorting and filtering
 - [x] Expandable rows to show span details
 - [x] Full Trace-Span view as a side drawer to analyse traces and spans hierarchy and their individual properties
+- [x] Add support for both light and dark themes
 
 ### Pending
 
@@ -67,13 +68,13 @@ src/
 - [x] Close the side drawer when clicked outside
 - [x] Make the first column sticky while doing horizontal scroll
 - [x] Truncate the long text dynamically and show the full text in tooltip on hover
+- [x] Integrate the theme to match the visual consistency with other screens
+- [x] Implement consistent interactions states through out the table
 
 ### Pending
 
 - [ ] Fix why provided fonts (Akkurat) are not applied
 - [ ] Disable horizontal scroll in the expanded row section showing span list 
-- [ ] Integrate the theme to match the visual consistency with other screens
-- [ ] Implement consistent interactions states through out the table
 
 
 ## Tech Stack

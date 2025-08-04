@@ -14,6 +14,7 @@ import { Text } from '../ui/Text'
 import { SideDrawer, SIDE_DRAWER_WIDTH } from './SideDrawer'
 import { SpanFlatList } from '../SpanFlatList'
 import { useClickOutside } from '../../utils/useClickOutside'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 const columnHelper = createColumnHelper<LogTraceType>()
 
@@ -296,6 +297,7 @@ export default function TracesTable() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const sideDrawerRef = useRef<HTMLDivElement>(null)
+  const themeToggleRef = useRef<HTMLButtonElement>(null)
   
   const table = useReactTable({
     data: traces,
@@ -337,7 +339,8 @@ export default function TracesTable() {
   useClickOutside(
     [tableContainerRef, sideDrawerRef],
     handleCloseDrawer,
-    isDrawerOpen
+    isDrawerOpen,
+    [themeToggleRef]
   )
 
   return (
@@ -351,7 +354,10 @@ export default function TracesTable() {
       >
         <div className="p-4">
           <div className="max-w-full">
-            <h1 className="text-md font-medium mb-6 text-on-surface-base">Traces</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-md font-medium text-on-surface-base">Traces</h1>
+              <ThemeToggle ref={themeToggleRef} />
+            </div>
             
             <div className="bg-surface-highest rounded-lg shadow-sm border border-outline overflow-hidden" ref={tableContainerRef}>
               <div className="overflow-x-auto" ref={scrollContainerRef}>
