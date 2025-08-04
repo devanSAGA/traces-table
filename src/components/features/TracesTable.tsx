@@ -7,7 +7,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
 import { useTracesStore, type LogTraceType } from '../../store/tracesStore'
 import { Badge } from '../ui/Badge'
 import { Text } from '../ui/Text'
@@ -294,6 +294,8 @@ export default function TracesTable() {
   const [selectedTrace, setSelectedTrace] = useState<LogTraceType | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [columnOrder, setColumnOrder] = useState<string[]>([])
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const sideDrawerRef = useRef<HTMLDivElement>(null)
@@ -302,6 +304,10 @@ export default function TracesTable() {
   const table = useReactTable({
     data: traces,
     columns: getColumns(selectedTrace, isDrawerOpen),
+    state: {
+      ...(columnOrder.length > 0 && { columnOrder }),
+    },
+    onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -316,6 +322,75 @@ export default function TracesTable() {
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false)
     setSelectedTrace(null)
+  }
+
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, columnId: string) => {
+    // Initialize column order from current table state if not already set
+    if (columnOrder.length === 0) {
+      const currentOrder = table.getAllLeafColumns().map(col => col.id)
+      setColumnOrder(currentOrder)
+    }
+    
+    setDraggedColumn(columnId)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', columnId)
+    
+    // Add a subtle visual effect to the dragged element
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    
+    // Add visual feedback for valid drop target
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.backgroundColor = 'var(--color-primary-container)'
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Remove visual feedback when leaving drop target
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.backgroundColor = ''
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault()
+    
+    // Remove visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.backgroundColor = ''
+    }
+    
+    if (!draggedColumn || draggedColumn === targetColumnId) {
+      setDraggedColumn(null)
+      return
+    }
+
+    const newColumnOrder = [...columnOrder]
+    const draggedIndex = newColumnOrder.indexOf(draggedColumn)
+    const targetIndex = newColumnOrder.indexOf(targetColumnId)
+    
+    // Remove dragged column and insert at target position
+    newColumnOrder.splice(draggedIndex, 1)
+    newColumnOrder.splice(targetIndex, 0, draggedColumn)
+    
+    setColumnOrder(newColumnOrder)
+    setDraggedColumn(null)
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Reset visual effects
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = ''
+    }
+    setDraggedColumn(null)
   }
 
   useEffect(() => {
@@ -368,12 +443,22 @@ export default function TracesTable() {
                         {headerGroup.headers.map((header, index) => (
                           <th
                             key={header.id}
-                            className={`px-4 py-2 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider ${
+                            draggable={index > 1} // Only allow dragging non-sticky columns
+                            onDragStart={index > 1 ? (e) => handleDragStart(e, header.id) : undefined}
+                            onDragOver={index > 1 ? handleDragOver : undefined}
+                            onDragLeave={index > 1 ? handleDragLeave : undefined}
+                            onDrop={index > 1 ? (e) => handleDrop(e, header.id) : undefined}
+                            onDragEnd={index > 1 ? handleDragEnd : undefined}
+                            className={`px-4 py-2 text-left text-xs font-medium text-on-surface-highest-subtle uppercase tracking-wider group ${
                               index <= 1 
                                 ? `sticky left-0 bg-surface-low z-20 ${index === 1 ? 'border-r border-outline' : ''}` 
                                 : 'bg-surface-low'
                             } ${
                               header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-surface-high transition-colors' : ''
+                            } ${
+                              index > 1 && draggedColumn === header.id ? 'opacity-50' : ''
+                            } ${
+                              index > 1 ? 'cursor-move' : ''
                             }`}
                             style={{
                               ...(index === 0 ? { left: '0px', width: '48px' } : {}),
@@ -388,6 +473,9 @@ export default function TracesTable() {
                             onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
                           >
                             <div className="flex items-center gap-2">
+                              {index > 1 && (
+                                <GripVertical className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+                              )}
                               {header.isPlaceholder
                                 ? null
                                 : flexRender(
