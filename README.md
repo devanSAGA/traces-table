@@ -37,7 +37,7 @@ src/
 |__components/
     |__ui/                    #Reusable UI components
     |__features/
-      |__TracesTable.tsx    # Main traces table component
+      |__TracesTable          # main traces table component
 |__staticData.ts              # Sample trace data
 |__App.tsx                    # Main application component
 |__main.tsx                   # Application entry point

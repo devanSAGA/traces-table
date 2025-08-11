@@ -1,4 +1,4 @@
-import TracesTable from './components/features/TracesTable';
+import TracesTable from './components/features/TracesTable/TracesTable';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ShortcutProvider } from './contexts/ShortcutContext';
 

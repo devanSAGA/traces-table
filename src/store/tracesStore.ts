@@ -45,16 +45,8 @@ export interface LogSpanType {
 
 interface TracesState {
   traces: LogTraceType[]
-  setTraces: (traces: LogTraceType[]) => void
-  addTrace: (trace: LogTraceType) => void
-  removeTrace: (index: number) => void
 }
 
-export const useTracesStore = create<TracesState>((set) => ({
-  traces: staticTraceData,
-  setTraces: (traces) => set({ traces }),
-  addTrace: (trace) => set((state) => ({ traces: [...state.traces, trace] })),
-  removeTrace: (index) => set((state) => ({ 
-    traces: state.traces.filter((_, i) => i !== index) 
-  })),
+export const useTracesStore = create<TracesState>(() => ({
+  traces: staticTraceData
 }))

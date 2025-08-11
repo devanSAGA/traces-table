@@ -22,7 +22,7 @@ export const SideDrawer = ({ isOpen, onClose, trace }: SideDrawerProps) => {
   }
 
   return (
-    <div className="bg-primary-container-subtle border border-outline flex flex-col m-2 rounded-lg" style={{ height: 'calc(100% - 16px)' }}>
+    <div className="bg-primary-container-subtle border border-outline flex flex-col m-2 rounded-lg h-[calc(100%-16px)]">
       {/* Header */}
       <div className="flex items-center justify-between p-6 pb-0 border-outline flex-shrink-0">
         <h2 className="text-base font-medium text-on-surface-highest">Trace Details</h2>
@@ -59,7 +59,7 @@ export const SideDrawer = ({ isOpen, onClose, trace }: SideDrawerProps) => {
           <h3 className="text-sm font-medium text-on-surface-highest-subtle mb-3">JSON Viewer</h3>
           <div className="flex-1 bg-primary-container-light border border-outline rounded-lg overflow-hidden">
             <div className="h-full overflow-y-auto p-3">
-              <JsonViewer selectedNode={selectedNode} defaultTrace={trace} />
+              <JsonViewer selectedNode={selectedNode} initialValue={trace} />
             </div>
           </div>
         </div>

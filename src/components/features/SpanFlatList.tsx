@@ -1,5 +1,5 @@
-import { LogSpanType } from '../store/tracesStore'
-import { Badge } from './ui/Badge'
+import { LogSpanType } from '../../store/tracesStore'
+import { Badge } from '../ui/Badge'
 
 const getStatusType = (status: string) => {
   switch (status) {
@@ -40,8 +40,7 @@ export const SpanFlatList = ({ spans }: SpanFlatListProps) => {
         {sortedSpans.map((span) => (
           <div 
             key={span.id} 
-            className="flex items-center justify-between bg-surface-highest p-3 rounded border border-outline"
-            style={{ width: '430px' }}
+            className="flex items-center justify-between bg-surface-highest p-3 rounded border border-outline w-[430px]"
           >
             <Badge type={getStatusType(span.status)}>
               {span.status}

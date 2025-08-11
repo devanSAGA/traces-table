@@ -1,6 +1,6 @@
 import { useState, MouseEvent } from 'react';
 import { ChevronDown, ChevronRight, CheckCircle, XCircle, AlertCircle, Clock } from 'lucide-react';
-import { LogTraceType, LogSpanType, useTracesStore } from '../../store/tracesStore';
+import { LogTraceType, LogSpanType } from '../../store/tracesStore';
 import { Text } from '../ui/Text';
 
 interface TreeNodeData {
@@ -49,7 +49,7 @@ const TreeNode = ({ node, level = 0, children = [], onNodeSelect }: TreeNodeProp
         className="flex items-center py-0 rounded-md transition-colors group"
         style={{ paddingLeft: `${level * 12}px` }}
       >
-        {/* Chevron Icon - Only for expand/collapse */}
+        {/* Chevron Icon - for expand/collapse */}
         {hasChildren ? (
           <button
             className={`p-0.5 mr-1 flex-shrink-0 rounded transition-colors ${
@@ -69,7 +69,6 @@ const TreeNode = ({ node, level = 0, children = [], onNodeSelect }: TreeNodeProp
           <div className="w-6 mr-2 flex-shrink-0"></div>
         )}
                 
-        {/* Clickable Content Area - For node selection */}
         <div 
           className="flex items-center gap-2 flex-1 min-w-0 hover:bg-surface-high rounded-md p-1 cursor-pointer transition-colors overflow-hidden"
           onClick={handleLabelClick}
@@ -79,7 +78,7 @@ const TreeNode = ({ node, level = 0, children = [], onNodeSelect }: TreeNodeProp
             {getStatusIcon(node.status)}
           </div>
           
-          {/* Name - takes remaining space and truncates */}
+          {/* Trace/Span Name */}
           <div className="flex-1 min-w-0">
             <Text 
               color='primary'
@@ -90,7 +89,7 @@ const TreeNode = ({ node, level = 0, children = [], onNodeSelect }: TreeNodeProp
             </Text>
           </div>
           
-          {/* Latency - always visible */}
+          {/* Latency */}
           <div className="flex-shrink-0">
             <Text color="on-surface-highest-subtle">
               <span className="font-mono text-xs">
@@ -140,9 +139,9 @@ const buildTree = (trace: LogTraceType): TreeNodeData => {
       // Find the parent span by its referenceId
       const parentSpan = spans.find((s: LogSpanType) => s.referenceId === span.parentReferenceId);
       if (parentSpan) {
-        const parentChildren = childrenMap.get(parentSpan.id) || [];
-        parentChildren.push(span);
-        childrenMap.set(parentSpan.id, parentChildren);
+        const childrenOfParentSpan = childrenMap.get(parentSpan.id) || [];
+        childrenOfParentSpan.push(span);
+        childrenMap.set(parentSpan.id, childrenOfParentSpan);
       }
     }
   });
@@ -183,10 +182,8 @@ interface TraceTreeProps {
 }
 
 const TraceTree = ({ trace, onNodeSelect }: TraceTreeProps) => {
-  const { traces } = useTracesStore();
   
-  // Use the provided trace or fall back to all traces from store
-  const tracesToShow = trace ? [trace] : traces;
+  const tracesToShow = trace ? [trace] : [];
   
   if (!tracesToShow.length) {
     return (

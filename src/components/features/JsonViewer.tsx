@@ -6,12 +6,12 @@ import { useTheme } from '../../contexts/ThemeContext'
 
 interface JsonViewerProps {
   selectedNode?: LogTraceType | LogSpanType | null
-  defaultTrace?: LogTraceType | null
+  initialValue?: LogTraceType | null
 }
 
-export const JsonViewer = ({ selectedNode, defaultTrace }: JsonViewerProps) => {
+export const JsonViewer = ({ selectedNode, initialValue }: JsonViewerProps) => {
   const { isDark } = useTheme()
-  const nodeToShow = selectedNode || defaultTrace
+  const nodeToShow = selectedNode || initialValue
   
   if (!nodeToShow) {
     return (
